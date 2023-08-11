@@ -50,12 +50,12 @@ def get_random_gif_url(search_obj):
         data = response.json()
 
         if "data" in data and len(data["data"]) > 0:
-            gif_url = data["data"][0]["images"]["original"]["url"]
-            return gif_url
+            gif_urls = [item["images"]["original"]["url"] for item in data["data"]]
+            return gif_urls
         else:
-            return None
+            return []
     else:
-        return None
+        return []
 
 
 # APP
@@ -92,32 +92,51 @@ async def telegram_webhook(request: Request):
     data = await request.json()
 
     chat_id = data["message"]["chat"]["id"]
-    prompt = data["message"]["text"]
-    gif_url = get_random_gif_url(prompt)
-    if prompt.startswith("/start"):
+
+    # Check if the "text" key exists in the message
+    if "text" in data["message"]:
+        prompt = data["message"]["text"]
+        gif_url = get_random_gif_url(prompt)
+
+        if prompt.startswith("/start"):
+            msg = "\n".join(
+                [
+                    "Hi dear!💖",
+                    "Write what gif you want.",
+                ]
+            )
+        elif prompt.startswith("/stop"):
+            msg = "Bye, dear user. See you soon. When you come back, write /start command!"
+        else:
+            if gif_url:
+                msg = "\n".join(
+                    [
+                        "We found GIFs for you! 🥳",
+                        f"Link for {prompt}: {gif_url}",
+                        "Write what gif you want next or use command /stop to stop your search.",
+                    ]
+                )
+            else:
+                msg = "\n".join(
+                    [
+                        f"Sorry, no GIFs found for search '{prompt}'😢",
+                        "Please try again.",
+                        "Write what gif you want next or edit your previous search.",
+                    ]
+                )
+
+    elif "sticker" in data["message"]:
+        msg = "\n".join(
+            ["Received a sticker! Stickers are awesome! 🌟", "Write what gif you want."]
+        )
+    elif "photo" in data["message"] or "video" in data["message"]:
         msg = "\n".join(
             [
-                "Hi dear!💖",
+                "Received a photo 📸 or video 🎥! Memories captured!",
                 "Write what gif you want.",
             ]
         )
-    elif prompt.startswith("/stop"):
-        msg = "Bye, dear user. See you soon. When you come back, write /start command!"
     else:
-        if gif_url:
-            msg = "\n".join(
-                [
-                    "We found GIFs for you! 🥳",
-                    f"Link for {prompt}: {gif_url}",
-                    "Write what gif you want next or use command /stop to stop your search.",
-                ]
-            )
-        else:
-            msg = "\n".join(
-                [
-                    f"Sorry, no GIFs found for search '{prompt}'😢",
-                    "Please try again.",
-                    "Write what gif you want next or edit your previous search.",
-                ]
-            )
+        msg = "\n".join(["Received a non-text message.", "Write what gif you want."])
+
     return send_msg(chat_id, msg)
