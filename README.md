@@ -1,2 +1,2 @@
-# gif_seacher_bot
-Gif Seacher Telegram Bot
+# Gif Searcher Bot
+
