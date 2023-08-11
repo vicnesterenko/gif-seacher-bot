@@ -1,5 +1,4 @@
 import os
-import random
 import urllib.parse
 
 import requests
@@ -109,11 +108,11 @@ async def telegram_webhook(request: Request):
             msg = "Bye, dear user. See you soon. When you come back, write /start command!"
         else:
             if gif_url:
+                # Construct a message with GIF links
                 msg = "\n".join(
                     [
-                        "We found GIFs for you! 🥳",
-                        f"Link for {prompt}: {gif_url}",
-                        "Write what gif you want next or use command /stop to stop your search.",
+                        f"Link {i}: {gif_url}"
+                        for i, gif_url in enumerate(gif_url, start=1)
                     ]
                 )
             else:
@@ -126,13 +125,11 @@ async def telegram_webhook(request: Request):
                 )
 
     elif "sticker" in data["message"]:
-        msg = "\n".join(
-            ["Received a sticker! Stickers are awesome! 🌟", "Write what gif you want."]
-        )
+        msg = "\n".join(["Received a sticker 🌟", "Write what gif you want."])
     elif "photo" in data["message"] or "video" in data["message"]:
         msg = "\n".join(
             [
-                "Received a photo 📸 or video 🎥! Memories captured!",
+                "Received a photo 📸 or video 🎥!",
                 "Write what gif you want.",
             ]
         )
